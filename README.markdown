@@ -3,8 +3,8 @@ Node-perl-packer
 
 NodeJS binding of useful perl pack/unpack functions.
 
-[Node.js]: http://nodejs.org/
-[Github repo]: https://github.com/Sannis/node-perl-packer
+[Node.js](http://nodejs.org/)
+[Github repo](https://github.com/Sannis/node-perl-packer)
 
 
 Dependencies
@@ -15,7 +15,7 @@ This module tested with Node version 0.4.1 (@v0.1).
 To build it you must install libperl-- library and development files for it.
 To install these dependencies, you can find it on github:
 
-[Github repo]: https://github.com/Leont/libperl--
+[Github repo](https://github.com/Leont/libperl--)
 
 Contributing
 ------------
