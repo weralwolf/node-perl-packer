@@ -69,18 +69,24 @@ Handle<Value> PerlPackerJS::Pack(Arguments const & args) {
 
 Handle<Value> PerlPackerJS::Unpack(Arguments const & args) {
     HandleScope scope;
-    REQ_STR_ARG(0, format);
-    REQ_STR_ARG(1, arguments);
-    std::string formatValue = PrepareString(format);
-    std::string argumentsValue = PrepareString(arguments);
-    if (formatValue.size() == 0 || argumentsValue.size() == 0) {
+    REQ_STR_ARG(0, specification);
+    REQ_STR_ARG(1, source);
+    std::string specificationValue = PrepareString(specification);
+    std::string sourceValue = PrepareString(source);
+    if (specificationValue.size() == 0 || sourceValue.size() == 0) {
         return Undefined();
     };
-    std::string result =  PerlPackerJS::__packer->Unpack(formatValue.c_str(), argumentsValue.c_str());
+    std::list<std::string> dataList =  PerlPackerJS::__packer->Unpack(specificationValue.c_str(), sourceValue.c_str());
     if (PerlPackerJS::__packer->CountOfErrors() != 0) {
-        result = PerlPackerJS::__packer->FlushErrors();
+        std::string errors = PerlPackerJS::__packer->FlushErrors();
+        return scope.Close(V8STR2(errors.c_str(), errors.size()));
     };
-    return scope.Close(V8STR2(result.c_str(), result.size()));
+    v8::Local<v8::Array> JSDataList = Array::New(dataList.size());
+    unsigned int i = 0;
+    for(std::list<std::string>::iterator str=dataList.begin(); str != dataList.end(); ++str, ++i) {
+        JSDataList->Set(i, V8STR2(str->c_str(), str->size()));
+    };
+    return scope.Close(JSDataList);
 };
 
 std::string PerlPackerJS::PrepareString(String::Utf8Value const & string) {

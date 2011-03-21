@@ -13,6 +13,7 @@
 #include<node_object_wrap.h>
 #include<node_events.h>
 #include<string>
+#include<list>
 #include"PerlPacker.h"
 
 using namespace v8;
@@ -27,6 +28,7 @@ private:
     static Persistent<FunctionTemplate> __constructorTemplate;
     PerlPackerJS * operator = (PerlPackerJS const &);
     PerlPackerJS(PerlPackerJS const &);
+
     /**
      * Preparing string to using it in other functions
      * @param string instance
@@ -38,7 +40,19 @@ public:
     virtual ~PerlPackerJS();
     static void Init(Handle<Object>);
     static Handle<Value> New(Arguments const &);
+
+    /**
+     * Wraper of PerlPacker::Pack function for NodeJS
+     * @param js arguments provided by v8
+     * @return packed string
+     */
     static Handle<Value> Pack(Arguments const &);
+
+    /**
+     * Wraper of PerlPacker::Unpack function for NodeJS
+     * @param js arguments provided by v8
+     * @return unpacked string
+     */
     static Handle<Value> Unpack(Arguments const &);
 };
 

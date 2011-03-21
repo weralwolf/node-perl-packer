@@ -5,29 +5,6 @@
  * Created on March 4, 2011, 6:54 PM
  */
 
-// g++ -Iblib/headers -I/usr/lib/perl/5.10/CORE --std=gnu++0x -lperl++ -ltap++ -Lblib/so -lstdc++ -c -o PerlPack.o PerlPack.cpp
-
-/*
- * C++ Reserved or Non-graphic Characters
-
-
-Character	ASCII Representation	ASCII Value	Escape Sequence
-Newline	NL (LF)	10	\n
-Horizontal tab	HT	9	\t
-Vertical tab	VT	11	\v
-Backspace	BS	8	\b
-Carriage return	CR	13	\r
-Formfeed	FF	12	\f
-Alert	BEL	7	\a
-Backslash	\	92	\\
-Question mark	?	63	\?
-Single quotation mark	'	39	\'
-Double quotation mark	"	34	\"
-Octal number	ooo	--	\ooo
-Hexadecimal number	hhh	--	\xhhh
-Null character	NUL	0	\0
- */
-
 #include "PerlPacker.h"
 
 PerlPacker * PerlPacker::_instance = NULL;
@@ -72,18 +49,18 @@ unsigned int PerlPacker::CountOfErrors() const {
 PerlPacker * PerlPacker::Instance() {
     if (_instance == NULL) {
         _instance = new PerlPacker();
+        _instance->InitUArray();
     };
     return _instance;
 };
 
 PerlPacker * PerlPacker::operator =(PerlPacker const & copy) {};
 
-std::string PerlPacker::Pack(std::string const & format, std::string const & arguments) {
-    return EvalCommand(std::string("pack"), format+", "+arguments);
+void PerlPacker::InitUArray() {
+    EvalQuery(std::string("my @uDataArray;"));
 };
 
-std::string PerlPacker::EvalCommand(std::string const & command, std::string const & arguments) {
-    std::string query(command+"("+arguments+")");
+std::string PerlPacker::EvalQuery(std::string const & query) {
     try {
         perl::Scalar::Temp queryResult = interpreter.eval(query.c_str());
         perl::Raw_string rawStringResult = queryResult;
@@ -95,6 +72,38 @@ std::string PerlPacker::EvalCommand(std::string const & command, std::string con
     };
 };
 
-std::string PerlPacker::Unpack(std::string const & format, std::string const & arguments) {
-    return EvalCommand(std::string("unpack"), format+", "+arguments);
+std::string PerlPacker::PrepareString(std::string const & in) const {
+    std::string out(in);
+
+    for(size_t occurence = out.find_first_of("\n", 0); occurence != std::string::npos; occurence = out.find_first_of("\n", occurence+2)) {
+        if (out.find_first_of("\\n", occurence-1)+1 != occurence) {
+            out.replace(occurence, 1, "\\n");
+        };
+    };
+
+    for(size_t occurence = out.find_first_of("\"", 0); occurence != std::string::npos; occurence = out.find_first_of("\"", occurence+2)) {
+        if (out.find_first_of("\\\"", occurence-1)+1 != occurence) {
+            out.replace(occurence, 1, "\\\"");
+        };
+    };
+    return out;
+};
+
+std::string PerlPacker::Pack(std::string const & specification, std::string const & arguments) {
+    std::stringstream query;
+    query << "pack(" << specification << ", " << arguments << ")";
+    return EvalQuery(query.str());
+};
+
+std::list<std::string> PerlPacker::Unpack(std::string const & specification, std::string const & source) {
+    std::stringstream query;
+    query << "@uDataArray =  unpack(" << specification << ", \"" << PrepareString(source) << "\"); scalar(@uDataArray);";
+    int uDataArrayLen = atoi(EvalQuery(query.str()).c_str());
+    std::list<std::string> data;
+    for(int i = 0; i < uDataArrayLen; ++i) {
+        query.clear();
+        query << "$uDataArray[" << i << "];";
+        data.push_back(EvalQuery(query.str()));
+    };
+    return data;
 };
