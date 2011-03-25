@@ -102,7 +102,7 @@ private:
      * @param input string
      * @return string with escaped \n and " chars
      */
-    std::string PrepareString(std::string const &) const;
+    std::string PrepareString(std::string const &, char='"') const;
 };
 
 #endif	/* __PERLPACK_H__ */

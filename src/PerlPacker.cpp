@@ -72,18 +72,19 @@ std::string PerlPacker::EvalQuery(std::string const & query) {
     };
 };
 
-std::string PerlPacker::PrepareString(std::string const & in) const {
+std::string PerlPacker::PrepareString(std::string const & in, char escapeChar) const {
     std::string out(in);
+    char const * replacements = (escapeChar == '\"') ? "\"\n\t\v\b\r\f\a\\" : "'\n\t\v\b\r\f\a\\";
+    unsigned short int len = strlen(replacements)+1;
+    std::string fixer("\\");
 
-    for(size_t occurence = out.find_first_of("\n", 0); occurence != std::string::npos; occurence = out.find_first_of("\n", occurence+2)) {
-        if (out.find_first_of("\\n", occurence-1)+1 != occurence) {
-            out.replace(occurence, 1, "\\n");
-        };
-    };
-
-    for(size_t occurence = out.find_first_of("\"", 0); occurence != std::string::npos; occurence = out.find_first_of("\"", occurence+2)) {
-        if (out.find_first_of("\\\"", occurence-1)+1 != occurence) {
-            out.replace(occurence, 1, "\\\"");
+    for(unsigned short int i = 0; i < len; ++i) {
+        for(size_t occurence = out.find_first_of(replacements[i], 0);
+                occurence != std::string::npos;
+                occurence = out.find_first_of(replacements[i], occurence+2)) {
+            if (out.find_first_of(fixer+replacements[i], occurence-1)+1 != occurence) {
+                out.replace(occurence, 1, fixer+replacements[i]);
+            };
         };
     };
     return out;
